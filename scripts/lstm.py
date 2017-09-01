@@ -39,7 +39,7 @@ def train(corpus_file, cache_path, basename, char_indices_file):
 
     # Path to corpus file
     with open(corpus_file) as f:
-        text = f.read().lower()
+        text = f.read()#.lower()
     print('corpus length:', len(text))
 
     with open(char_indices_file) as f:
