@@ -26,7 +26,7 @@ Once you have a few "weights" files, you can start generating text:
 Some of the dependencies are listed in the `environment.yml` file. You can
 create a new Anaconda environment set up to run these scripts with:
 
-    conda create --file=environment.yml
+    conda env create --file=environment.yml
 
 ---
 
