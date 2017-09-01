@@ -1,0 +1,11 @@
+name: sagansonnets
+
+dependencies:
+  - python=3
+  - beautifulsoup4
+  - numpy
+  - h5py
+  - pip
+  - pip:
+    - Theano
+    - keras
