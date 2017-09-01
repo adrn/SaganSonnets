@@ -79,16 +79,12 @@ def sample(cache_path, basename, char_indices_file, weights_file,
            seed_text, output_file, nchars):
 
     weights_file = path.abspath(weights_file)
-    char_indices_file = path.join(cache_path, 'char_indices.json')
 
     with open(char_indices_file) as f:
         d = json.loads(f.read())
         chars = d['chars']
         char_indices = d['char_indices']
         indices_char = d['indices_char']
-
-    with open(corpus_file) as f:
-        text = f.read().lower()
 
     model = get_model(maxlen, chars)
     model.load_weights(weights_file)
@@ -155,15 +151,21 @@ if __name__ == '__main__':
     parser.add_argument("--corpus", dest="corpus_file", type=str, required=True)
 
     parser.add_argument("--weights", dest="weights_file", type=str)
-    parser.add_argument("--seed", dest="seed", type=int, default=None)
+    parser.add_argument("--seed", dest="seed_text", type=str, default=None)
     parser.add_argument("--output", dest="output_file", default=None)
     parser.add_argument("--nchars", dest="nchars", type=int, default=512)
 
     args = parser.parse_args()
 
-    corpus_file = path.abspath(args.corpus_file)
-    cache_path = path.dirname(corpus_file)
-    basename = path.basename(corpus_file).split("_corpus")[0]
+    if args.train:
+        corpus_file = path.abspath(args.corpus_file)
+        cache_path = path.dirname(corpus_file)
+        basename = path.basename(corpus_file).split("_corpus")[0]
+
+    else: # args.sample
+        weights_file = path.abspath(args.weights_file)
+        cache_path = path.dirname(weights_file)
+        basename = path.basename(weights_file).split("_weights")[0]
 
     char_indices_file = path.join(cache_path,
                                   '{0}_char_indices.json'.format(basename))
@@ -175,5 +177,5 @@ if __name__ == '__main__':
     elif args.sample:
         sample(cache_path=cache_path, basename=basename,
                char_indices_file=char_indices_file,
-               weights_file=args.weights_file, seed=args.seed,
+               weights_file=args.weights_file, seed_text=args.seed_text,
                output_file=args.output_file, nchars=args.nchars)

@@ -9,11 +9,17 @@ anywhere, but I recommend just putting it in a "data" directory in this project.
 Other output (e.g., from training the model) will be written to a directory at
 `data/../cache`, i.e. from the `<project root>/cache`:
 
-    python scripts/make_corpus.py --data=data/file.json
+    python scripts/make_corpus.py --data=data/limericks_all.json
 
 Next you have to train the LSTM model:
 
-    python scripts/lstm.py --train --corpus=cache/file_corpus.txt
+    python scripts/lstm.py --train --corpus=cache/limericks_all_corpus.txt
+
+Once you have a few "weights" files, you can start generating text:
+
+    python scripts/lstm.py --sample \
+    --weights=cache/file_weights_00X.h5 \
+    --seed="There was" --nchars=100
 
 ## Dependencies
 
