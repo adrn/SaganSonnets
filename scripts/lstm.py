@@ -31,13 +31,7 @@ def get_model(maxlen, chars):
 
     return model
 
-def train(corpus_file):
-    corpus_file = path.abspath(corpus_file)
-    cache_path = path.dirname(corpus_file)
-
-    basename = path.basename(corpus_file).split("_corpus")[0]
-    char_indices_file = path.join(cache_path,
-                                  '{0}_char_indices.json'.format(basename))
+def train(corpus_file, cache_path, basename, char_indices_file):
 
     if not path.exists(char_indices_file):
         raise IOError("Character indices file doesn't exist: {0}"
@@ -78,15 +72,14 @@ def train(corpus_file):
         print('-' * 50)
         print('Iteration', iteration)
         model.fit(X, y, batch_size=128, nb_epoch=1)
-        model.save_weights(join(cache_path,
-                           'weights_{0:03d}.h5'.format(iteration)))
+        model.save_weights(path.join(
+            cache_path, '{0}_weights_{1:03d}.h5'.format(basename, iteration)))
 
-def sample(weights_file, seed, output_file, nchars):
+def sample(cache_path, basename, char_indices_file, weights_file,
+           seed_text, output_file, nchars):
 
-    weights_file = abspath(weights_file)
-    cache_path = dirname(weights_file)
-    char_indices_file = join(cache_path, 'char_indices.json')
-    corpus_file = join(cache_path, 'corpus.txt')
+    weights_file = path.abspath(weights_file)
+    char_indices_file = path.join(cache_path, 'char_indices.json')
 
     with open(char_indices_file) as f:
         d = json.loads(f.read())
@@ -115,14 +108,9 @@ def sample(weights_file, seed, output_file, nchars):
         probas = np.random.multinomial(1, preds, 1)
         return np.argmax(probas)
 
-    if seed is not None:
-        np.random.seed(seed)
-        random.seed(seed)
-
-    generated = "seed:{}\n\n".format(seed)
-    start_index = random.randint(0, len(text) - maxlen - 1)
-    sentence = text[start_index: start_index + maxlen]
-    generated += sentence
+    # initialize the sampling with the seed text
+    generated = seed_text
+    sentence = generated
 
     sys.stdout.write(generated)
     sys.stdout.flush()
@@ -164,7 +152,8 @@ if __name__ == '__main__':
     group.add_argument("--train", dest="train", action="store_true")
     group.add_argument("--sample", dest="sample", action="store_true")
 
-    parser.add_argument("--corpus", dest="corpus_file", type=str)
+    parser.add_argument("--corpus", dest="corpus_file", type=str, required=True)
+
     parser.add_argument("--weights", dest="weights_file", type=str)
     parser.add_argument("--seed", dest="seed", type=int, default=None)
     parser.add_argument("--output", dest="output_file", default=None)
@@ -172,9 +161,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    corpus_file = path.abspath(args.corpus_file)
+    cache_path = path.dirname(corpus_file)
+    basename = path.basename(corpus_file).split("_corpus")[0]
+
+    char_indices_file = path.join(cache_path,
+                                  '{0}_char_indices.json'.format(basename))
+
     if args.train:
-        train(args.corpus_file)
+        train(corpus_file=corpus_file, cache_path=cache_path, basename=basename,
+              char_indices_file=char_indices_file)
 
     elif args.sample:
-        sample(weights_file=args.weights_file, seed=args.seed,
+        sample(cache_path=cache_path, basename=basename,
+               char_indices_file=char_indices_file,
+               weights_file=args.weights_file, seed=args.seed,
                output_file=args.output_file, nchars=args.nchars)
