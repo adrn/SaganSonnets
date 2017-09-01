@@ -3,7 +3,6 @@
 # Standard library
 from os import path
 import sys
-import random
 import json
 
 # Third-party
@@ -19,11 +18,12 @@ def get_model(maxlen, chars):
     # build the model: 2 stacked LSTM
     print('Build model...')
     model = Sequential()
-    model.add(LSTM(512, return_sequences=True,
+    model.add(LSTM(256, return_sequences=True,
                    input_shape=(maxlen, len(chars))))
+    model.add(Dropout(0.5))
+    model.add(LSTM(128, return_sequences=True))
     model.add(Dropout(0.2))
-    model.add(LSTM(512, return_sequences=False))
-    model.add(Dropout(0.2))
+    model.add(LSTM(32, return_sequences=False))
     model.add(Dense(len(chars)))
     model.add(Activation("softmax"))
 
@@ -67,9 +67,9 @@ def train(corpus_file, cache_path, basename, char_indices_file):
     model = get_model(maxlen, chars)
 
     # train the model, output generated text after each iteration
-    for iteration in range(1, 60):
+    for iteration in range(1, 64+1):
         print()
-        print('-' * 50)
+        print('-' * 80)
         print('Iteration', iteration)
         model.fit(X, y, batch_size=128, nb_epoch=1)
         model.save_weights(path.join(
@@ -88,12 +88,6 @@ def sample(cache_path, basename, char_indices_file, weights_file,
 
     model = get_model(maxlen, chars)
     model.load_weights(weights_file)
-
-    # def sample(a, temperature=1.0):
-    #     # helper function to sample an index from a probability array
-    #     a = np.log(a) / temperature
-    #     a = np.exp(a) / np.sum(np.exp(a))
-    #     return np.argmax(np.random.multinomial(1, a, 1))
 
     def sample(preds, temperature=1.0):
         # helper function to sample an index from a probability array
@@ -148,7 +142,7 @@ if __name__ == '__main__':
     group.add_argument("--train", dest="train", action="store_true")
     group.add_argument("--sample", dest="sample", action="store_true")
 
-    parser.add_argument("--corpus", dest="corpus_file", type=str, required=True)
+    parser.add_argument("--corpus", dest="corpus_file", type=str)
 
     parser.add_argument("--weights", dest="weights_file", type=str)
     parser.add_argument("--seed", dest="seed_text", type=str, default=None)
